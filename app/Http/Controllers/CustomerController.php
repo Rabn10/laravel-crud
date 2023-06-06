@@ -16,11 +16,17 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        $customers = Customer::all()->except('createdBy','updatedBy');
+        $customers = Customer::all();
+        $customers = $customers->map(function ($c){
+            return collect($c)->merge(['createdBy' => $c->createdBy()->first(['id', 'name'])])->except(['updatedBy', 'delete_flag','created_at','updated_at']);
+        });
         return  response()-> json([
-            "message"=>"Data fatched successfully",
             "data"=>$customers
             ],200);
+
+//        $customer = Customer::where('delete_flag',false)->get()->except(['updatedBy']);
+//        return  $customer = $customer->paginate(5);
+
     }
 
     /**
@@ -97,6 +103,10 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-        //
+        $customer->delete_flag = true;
+        $customer->save();
+        return  response()->json([
+            "message"=>"Customer removed successfully!"
+        ],200);
     }
 }
